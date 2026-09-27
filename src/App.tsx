@@ -11,12 +11,23 @@ type Tab = 'library' | 'capture' | 'study'
 function useOnline() {
   const [online, setOnline] = useState(navigator.onLine)
   useEffect(() => {
-    const f = () => setOnline(navigator.onLine)
-    window.addEventListener('online', f)
-    window.addEventListener('offline', f)
+    let dead = false
+    const check = () => {
+      // events lie in some webviews — probe the same-origin shell
+      fetch('/favicon.svg', { method: 'HEAD', cache: 'no-store' }).then(
+        () => !dead && setOnline(true),
+        () => !dead && setOnline(false),
+      )
+    }
+    const on = () => setOnline(navigator.onLine)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', on)
+    const t = setInterval(check, 3000)
     return () => {
-      window.removeEventListener('online', f)
-      window.removeEventListener('offline', f)
+      dead = true
+      clearInterval(t)
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', on)
     }
   }, [])
   return online
@@ -118,7 +129,7 @@ export default function App() {
 
       <main className="col">
         <header className="top">
-          <div>
+          <div className="brandcol">
             <div className="brand">
               <img src="/mark.png" alt="GridFail mark" className="brandmark" />
               Grid<span>Fail</span>

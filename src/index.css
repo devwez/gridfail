@@ -1,27 +1,27 @@
 :root {
-  /* qura-saas dark tokens, exact */
-  --bg: oklch(0.13 0.025 340);
-  --surface: oklch(0.18 0.03 340);
-  --surface-hover: oklch(0.22 0.025 340);
-  --border: oklch(1 0 0 / 12%);
-  --text: oklch(0.96 0.008 340);
-  --muted: oklch(0.68 0.02 340);
-  --faint: oklch(0.5 0.02 340);
-  --emerald: oklch(0.72 0.19 350);
-  --emerald-dim: oklch(0.72 0.19 350 / 0.14);
-  --amber: oklch(0.769 0.188 70);
-  --danger: oklch(0.704 0.191 22.216);
+  /* qura-app tokens: green-tinted dark, quiet, no glow spam */
+  --bg: oklch(0.09 0.012 155);
+  --surface: oklch(0.15 0.014 155);
+  --surface-hover: oklch(0.19 0.016 155);
+  --border: oklch(0.24 0.018 155);
+  --text: oklch(0.96 0.006 155);
+  --muted: oklch(0.63 0.02 155);
+  --faint: oklch(0.45 0.018 155);
+  --emerald: oklch(0.79 0.15 156);
+  --emerald-dim: oklch(0.79 0.15 156 / 0.12);
+  --amber: oklch(0.72 0.11 75);
+  --danger: oklch(0.62 0.18 25);
   --radius: 1.25rem;
 
-  --font-display: 'DM Sans', 'Inter', system-ui, sans-serif;
-  --sans: 'DM Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Comfortaa', system-ui, sans-serif;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 150ms;
   --dur: 250ms;
 
-  --shadow-mid: 0 8px 24px oklch(0.05 0.01 340 / 0.4);
+  --shadow-mid: 0 8px 24px oklch(0.05 0.01 155 / 0.35);
 
   color-scheme: dark;
   color: var(--text);
@@ -81,25 +81,6 @@ main.col {
   flex: 1;
   min-width: 0;
   width: 100%;
-}
-@media (min-width: 900px) {
-  .side {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    width: 220px;
-    position: sticky;
-    top: 0;
-    height: 100dvh;
-    padding: 28px 0;
-    flex-shrink: 0;
-  }
-  #root {
-    padding-bottom: 48px;
-  }
-  nav.tabs {
-    display: none;
-  }
 }
 .side .brand {
   font-size: 22px;
@@ -191,14 +172,14 @@ header.top {
   white-space: nowrap;
 }
 .net-pill.off {
-  color: oklch(0.12 0.02 340);
+  color: oklch(0.12 0.02 155);
   background: var(--emerald);
   border-color: var(--emerald);
   font-weight: 700;
 }
 .net-pill.on {
   color: var(--emerald);
-  border-color: oklch(0.72 0.19 350 / 0.45);
+  border-color: oklch(0.79 0.15 156 / 0.45);
 }
 
 /* stat tiles */
@@ -238,7 +219,7 @@ nav.tabs {
   left: 0;
   right: 0;
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: oklch(0.16 0.028 340 / 0.94);
+  background: oklch(0.12 0.013 155 / 0.94);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(14px);
   z-index: 20;
@@ -266,7 +247,7 @@ nav.tabs button .count {
   font-size: 10px;
   font-family: var(--mono);
   background: var(--emerald);
-  color: oklch(0.12 0.02 340);
+  color: oklch(0.12 0.02 155);
   border-radius: 999px;
   padding: 0 6px;
   font-weight: 700;
@@ -360,7 +341,7 @@ nav.tabs button .count {
   font-size: 14px;
 }
 .card.sub {
-  background: oklch(0.16 0.028 340);
+  background: oklch(0.12 0.013 155);
 }
 .card.empty {
   text-align: center;
@@ -380,7 +361,7 @@ button.btn {
   font-weight: 500;
   padding: 10px 16px;
   border-radius: 12px;
-  border: 1px solid oklch(0.72 0.19 350 / 0.45);
+  border: 1px solid oklch(0.79 0.15 156 / 0.45);
   background: var(--emerald-dim);
   color: var(--text);
   cursor: pointer;
@@ -412,7 +393,7 @@ button.btn.ghost {
   cursor: pointer;
 }
 .chips button.active {
-  color: oklch(0.12 0.02 340);
+  color: oklch(0.12 0.02 155);
   background: var(--emerald);
   border-color: var(--emerald);
   font-weight: 600;
@@ -425,7 +406,7 @@ textarea.text {
   padding: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: oklch(0.11 0.02 340);
+  background: oklch(0.11 0.012 155);
   color: var(--text);
   font: 14px/1.6 var(--sans);
   resize: vertical;
@@ -443,7 +424,7 @@ textarea.text {
 }
 .pill.local {
   color: var(--emerald);
-  border-color: oklch(0.72 0.19 350 / 0.4);
+  border-color: oklch(0.79 0.15 156 / 0.4);
 }
 .pill.cloud {
   color: var(--amber);
@@ -496,7 +477,7 @@ img.preview {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: oklch(0.16 0.028 340);
+  background: oklch(0.12 0.013 155);
   color: var(--text);
   font: inherit;
   font-size: 14px;
@@ -516,7 +497,7 @@ img.preview {
 
 .model {
   background: var(--surface);
-  border: 1px dashed oklch(0.72 0.19 350 / 0.4);
+  border: 1px dashed oklch(0.79 0.15 156 / 0.4);
   border-radius: var(--radius);
   padding: 14px 16px;
   margin-bottom: 12px;
@@ -552,5 +533,29 @@ img.preview {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* desktop: sidebar replaces bottom tabs + header brand. LAST so it wins. */
+@media (min-width: 900px) {
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 220px;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    padding: 28px 0;
+    flex-shrink: 0;
+  }
+  #root {
+    padding-bottom: 48px;
+  }
+  nav.tabs {
+    display: none;
+  }
+  header.top .brandcol {
+    display: none;
   }
 }

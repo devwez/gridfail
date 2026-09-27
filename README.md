@@ -1,32 +1,35 @@
-# React + TypeScript + Vite
+# GridFail
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Offline-first AI study kit for power-cut zones. Install once, study in
+airplane mode: snap a past-paper photo, get text, explanations, flashcards
+and quizzes — all on-device.
 
-Currently, two official plugins are available:
+Built for [HACK47 OFFGRID](https://hack47-offgrid.devpost.com) (Sep 15 – Oct
+15 2026) by [@devwez](https://github.com/devwez). Built with AI assistance
+for scaffolding and component adaptation; architecture and integration by
+devwez.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## The demo (60 seconds)
+1. Open the installed app, flip on airplane mode.
+2. Snap a matric past-paper photo.
+3. Read the extracted text, tap Explain (runs on-device).
+4. Drill the auto-made flashcards, run the quiz.
+5. Banner stays green: OFFLINE — everything still works.
 
-## React Compiler
+## Stack
+Vite + React + TS, vite-plugin-pwa, Dexie (IndexedDB), Tesseract.js (OCR),
+@huggingface/transformers (on-device AI), Framer Motion. No backend.
+Optional online fallback via OpenAI API (key in `.env`, never committed).
+Every answer is labeled local vs cloud.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Run it
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Status
+Wk1 in progress: PWA shell + library + capture/OCR. See
+`docs/superpowers/specs/2026-09-27-gridfail-design.md` for scope and
+roadmap. Shortcuts are tracked in TODO.md, nothing is faked — unfinished
+work shows as disabled, not mocked.

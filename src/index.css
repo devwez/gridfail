@@ -162,6 +162,13 @@ header.top {
   font-weight: 700;
   letter-spacing: -0.3px;
   font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brandmark {
+  height: 32px;
+  width: auto;
 }
 .brand span {
   color: var(--emerald);

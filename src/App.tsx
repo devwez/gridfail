@@ -93,6 +93,7 @@ export default function App() {
     <div className="shell">
       <aside className="side">
         <div className="brand">
+          <img src="/mark.png" alt="GridFail mark" className="brandmark" />
           Grid<span>Fail</span>
         </div>
         <nav>
@@ -119,6 +120,7 @@ export default function App() {
         <header className="top">
           <div>
             <div className="brand">
+              <img src="/mark.png" alt="GridFail mark" className="brandmark" />
               Grid<span>Fail</span>
             </div>
             <div className="tagline">study when the grid fails</div>

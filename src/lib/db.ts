@@ -14,7 +14,7 @@ export interface Page {
   image?: string // dataURL, scan only
   text: string
   explanation?: string
-  explainer?: 'local' | 'cloud'
+  explainer?: 'instant' | 'local' | 'cloud'
   createdAt: number
 }
 

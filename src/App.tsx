@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
-import { explain, makeCards } from './lib/ai'
+import { instant, isModelReady, makeCards, prefetchModel, upgrade } from './lib/ai'
 import { db, uid, type Card, type Page, type Paper } from './lib/db'
 import { ocrImage } from './lib/ocr'
 import { ensureSeed } from './lib/seed'
@@ -124,6 +124,49 @@ function Stat({ n, label }: { n: number | string; label: string }) {
   )
 }
 
+function ModelPanel() {
+  const [ready, setReady] = useState(isModelReady())
+  const [pct, setPct] = useState<number | null>(null)
+  const [err, setErr] = useState(false)
+
+  async function dl() {
+    setPct(0)
+    setErr(false)
+    try {
+      await prefetchModel(setPct)
+      setReady(true)
+      setPct(null)
+    } catch {
+      setErr(true)
+      setPct(null)
+    }
+  }
+
+  if (ready)
+    return (
+      <div className="model ready">
+        <span className="dot" /> Offline AI on board — upgrades answers with
+        zero network
+      </div>
+    )
+  return (
+    <div className="model">
+      <div className="model-row">
+        <span>Answers start instant. Download the 80MB offline brain for AI upgrades.</span>
+        <button className="btn" disabled={pct !== null} onClick={dl}>
+          {pct === null ? 'Download' : `${pct}%`}
+        </button>
+      </div>
+      {pct !== null && (
+        <div className="progress">
+          <div className="bar" style={{ width: `${pct}%` }} />
+        </div>
+      )}
+      {err && <div className="error">Download failed — instant answers still work. Retry online.</div>}
+    </div>
+  )
+}
+
 function Library({
   papers,
   pages,
@@ -139,31 +182,47 @@ function Library({
   goStudy: () => void
   refresh: () => Promise<void>
 }) {
-  const [busy, setBusy] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [filter, setFilter] = useState<string>('All')
   const subjects = ['All', ...new Set(papers.map((p) => p.subject))]
 
   async function runExplain(page: Page) {
-    setBusy(page.id)
     setErr(null)
+    // instant answer on screen in ms — no spinner staring contest
+    await db.pages.update(page.id, {
+      explanation: instant(page.text),
+      explainer: 'instant',
+    })
+    await db.cards.where('pageId').equals(page.id).delete()
+    await db.cards.bulkAdd(
+      makeCards(page.text, instant(page.text)).map((c) => ({
+        id: uid(),
+        pageId: page.id,
+        ...c,
+      })),
+    )
+    await refresh()
+    goStudy()
+    // background upgrade: cloud if configured, else on-device model
     try {
-      const { out, by } = await explain(page.text)
-      await db.pages.update(page.id, {
-        explanation: out,
-        explainer: by === 'cloud' ? 'cloud' : 'local',
-      })
-      await db.cards.where('pageId').equals(page.id).delete()
-      const made = makeCards(page.text, out)
-      await db.cards.bulkAdd(
-        made.map((c) => ({ id: uid(), pageId: page.id, ...c })),
-      )
-      await refresh()
-      goStudy()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Explain failed.')
-    } finally {
-      setBusy(null)
+      const up = await upgrade(page.text)
+      if (up) {
+        await db.pages.update(page.id, {
+          explanation: up.out,
+          explainer: up.by,
+        })
+        await db.cards.where('pageId').equals(page.id).delete()
+        await db.cards.bulkAdd(
+          makeCards(page.text, up.out).map((c) => ({
+            id: uid(),
+            pageId: page.id,
+            ...c,
+          })),
+        )
+        await refresh()
+      }
+    } catch {
+      /* instant answer stands — honest offline */
     }
   }
 
@@ -196,6 +255,7 @@ function Library({
 
   return (
     <div>
+      <ModelPanel />
       <div className="chips">
         {subjects.map((s) => (
           <button
@@ -235,24 +295,22 @@ function Library({
                   {pg.explanation && (
                     <p className="explain">
                       <span
-                        className={`pill ${pg.explainer === 'cloud' ? 'cloud' : 'local'}`}
+                        className={`pill ${pg.explainer === 'cloud' ? 'cloud' : pg.explainer === 'instant' ? '' : 'local'}`}
                       >
-                        {pg.explainer === 'cloud' ? 'cloud' : 'on-device'}
+                        {pg.explainer === 'cloud'
+                          ? 'cloud'
+                          : pg.explainer === 'instant'
+                            ? 'instant'
+                            : 'on-device AI'}
                       </span>
                       {pg.explanation}
                     </p>
                   )}
                   <div className="row">
-                    <button
-                      className="btn"
-                      disabled={busy === pg.id}
-                      onClick={() => runExplain(pg)}
-                    >
-                      {busy === pg.id
-                        ? 'Thinking on-device…'
-                        : pg.explanation
-                          ? 'Re-explain + rebuild cards'
-                          : 'Explain + make cards'}
+                    <button className="btn" onClick={() => runExplain(pg)}>
+                      {pg.explanation
+                        ? 'Explain again + rebuild cards'
+                        : 'Explain instantly + make cards'}
                     </button>
                   </div>
                 </div>

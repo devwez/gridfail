@@ -22,6 +22,7 @@ export async function prefetchModel(
   pipePromise = null // fresh attempt so retries actually retry
   try {
     await getPipe(onProgress)
+    onProgress?.(100)
   } catch (e) {
     pipePromise = null
     const msg = e instanceof Error ? e.message : String(e)
@@ -48,9 +49,31 @@ const LOCAL_BASE = '/models/'
 async function loadPipe(onProgress?: (pct: number) => void) {
   const { pipeline, env } = await import('@huggingface/transformers')
   env.localModelPath = LOCAL_BASE
-  const cb = (p: { progress?: number; status?: string; [k: string]: unknown }) => {
+  const cb = (p: {
+    progress?: number
+    status?: string
+    file?: string
+    loaded?: number
+    total?: number
+    [k: string]: unknown
+  }) => {
+    // aggregate across files — per-file % jumps 0→100, this stays smooth
+    if (p.file) {
+      seen.set(p.file, { loaded: p.loaded ?? 0, total: p.total ?? 0 })
+      let loaded = 0
+      let total = 0
+      seen.forEach((v) => {
+        loaded += v.loaded
+        total += v.total
+      })
+      if (total > 0) {
+        onProgress?.(Math.min(99, Math.round((loaded / total) * 100)))
+        return
+      }
+    }
     if (typeof p.progress === 'number') onProgress?.(Math.round(p.progress))
   }
+  const seen = new Map<string, { loaded: number; total: number }>()
   try {
     env.allowRemoteModels = false
     return await pipeline('text2text-generation', MODEL, {

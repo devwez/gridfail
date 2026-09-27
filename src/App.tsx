@@ -457,6 +457,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
     ok: 0,
     total: 0,
   })
+  const [order, setOrder] = useState<string[] | null>(null)
 
   useEffect(() => {
     db.attempts.toArray().then((a) => {
@@ -464,10 +465,31 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
         ok: a.filter((x) => x.correct).length,
         total: a.length,
       })
+      // worst-first: pages you miss float to the top. New cards first.
+      const byPage = new Map<string, { ok: number; total: number }>()
+      for (const x of a) {
+        const e = byPage.get(x.pageId) ?? { ok: 0, total: 0 }
+        e.total++
+        if (x.correct) e.ok++
+        byPage.set(x.pageId, e)
+      }
+      const acc = (c: Card) => {
+        const e = byPage.get(c.pageId)
+        return e && e.total > 0 ? e.ok / e.total : -1
+      }
+      setOrder(
+        [...cards].sort((x, y) => acc(x) - acc(y)).map((c) => c.id),
+      )
     })
   }, [cards.length])
 
-  if (cards.length === 0)
+  const deck = order
+    ? order
+        .map((id) => cards.find((c) => c.id === id))
+        .filter((c): c is Card => !!c)
+    : cards
+
+  if (deck.length === 0)
     return (
       <div className="card empty">
         <h3>No cards yet</h3>
@@ -475,7 +497,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
       </div>
     )
 
-  const card = cards[idx % cards.length]
+  const card = deck[idx % deck.length]
   const opts = useMemo(() => {
     const distractors = shuffle(
       cards.filter((c) => c.id !== card.id).map((c) => c.back),
@@ -498,7 +520,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
 
   function next() {
     setPicked(null)
-    setIdx((i) => (i + 1) % cards.length)
+    setIdx((i) => (i + 1) % deck.length)
     refresh()
   }
 
@@ -507,13 +529,13 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
       <div className="progress">
         <div
           className="bar"
-          style={{ width: `${((idx % cards.length) / cards.length) * 100}%` }}
+          style={{ width: `${((idx % deck.length) / deck.length) * 100}%` }}
         />
       </div>
       <div className="card">
         <p className="meta">
-          card {(idx % cards.length) + 1} / {cards.length} · score {score.ok}/
-          {score.total}
+          card {(idx % deck.length) + 1} / {deck.length} · weakest first ·
+          score {score.ok}/{score.total}
         </p>
         <h3 className="q">{card.front}</h3>
         {opts.map((o, i) => (

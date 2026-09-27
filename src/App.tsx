@@ -29,6 +29,41 @@ const fade = {
   transition: { duration: 0.22 },
 }
 
+const iconProps = {
+  width: 22,
+  height: 22,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+} as const
+
+const BookIcon = () => (
+  <svg {...iconProps}>
+    <path d="M12 6C10 4.5 7 4 4 4v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zm0 0v14" />
+  </svg>
+)
+const CameraIcon = () => (
+  <svg {...iconProps}>
+    <path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+    <circle cx="12" cy="13.5" r="3.2" />
+  </svg>
+)
+const CardsIcon = () => (
+  <svg {...iconProps}>
+    <rect x="7" y="7" width="13" height="13" rx="2" />
+    <path d="M4 15V5a1 1 0 0 1 1-1h9" />
+  </svg>
+)
+
+const NAV: { id: Tab; label: string; icon: () => React.JSX.Element }[] = [
+  { id: 'library', label: 'Library', icon: BookIcon },
+  { id: 'capture', label: 'Capture', icon: CameraIcon },
+  { id: 'study', label: 'Study', icon: CardsIcon },
+]
+
 export default function App() {
   const online = useOnline()
   const [tab, setTab] = useState<Tab>('library')
@@ -55,71 +90,99 @@ export default function App() {
   const ok = attempts.filter((a) => a.correct).length
 
   return (
-    <>
-      <header className="top">
-        <div>
-          <div className="brand">
-            Grid<span>Fail</span>
-          </div>
-          <div className="tagline">study when the grid fails</div>
+    <div className="shell">
+      <aside className="side">
+        <div className="brand">
+          Grid<span>Fail</span>
         </div>
-        <div className={`net-pill ${online ? 'on' : 'off'}`}>
-          {online ? '● ONLINE' : '○ OFFLINE — fully working'}
+        <nav>
+          {NAV.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              className={tab === id ? 'active press' : 'press'}
+              onClick={() => setTab(id)}
+            >
+              <Icon />
+              {label}
+              {id === 'study' && cards.length > 0 && ` · ${cards.length}`}
+            </button>
+          ))}
+        </nav>
+        <div className="foot">
+          {online ? '● online' : '○ offline mode'}
+          <br />
+          zero backend · v0.4
         </div>
-      </header>
+      </aside>
 
-      <section className="stats">
-        <Stat n={papers.length} label="papers" />
-        <Stat n={pages.length} label="pages" />
-        <Stat n={cards.length} label="cards" />
-        <Stat
-          n={attempts.length ? `${Math.round((ok / attempts.length) * 100)}%` : '—'}
-          label="accuracy"
-        />
-      </section>
+      <main className="col">
+        <header className="top">
+          <div>
+            <div className="brand">
+              Grid<span>Fail</span>
+            </div>
+            <div className="tagline">study when the grid fails</div>
+          </div>
+          <div className={`net-pill ${online ? 'on' : 'off'}`}>
+            {online ? '● ONLINE' : '○ OFFLINE — fully working'}
+          </div>
+        </header>
+
+        <section className="stats">
+          <Stat n={papers.length} label="papers" i={0} />
+          <Stat n={pages.length} label="pages" i={1} />
+          <Stat n={cards.length} label="cards" i={2} />
+          <Stat
+            n={attempts.length ? `${Math.round((ok / attempts.length) * 100)}%` : '—'}
+            label="accuracy"
+            i={3}
+          />
+        </section>
+
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} {...fade}>
+            {tab === 'library' && (
+              <Library
+                papers={papers}
+                pages={pages}
+                openPaper={openPaper}
+                setOpenPaper={setOpenPaper}
+                goStudy={() => setTab('study')}
+                refresh={refresh}
+              />
+            )}
+            {tab === 'capture' && (
+              <Capture refresh={refresh} goLibrary={() => setTab('library')} />
+            )}
+            {tab === 'study' && <Study cards={cards} refresh={refresh} />}
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
       <nav className="tabs">
-        {(['library', 'capture', 'study'] as Tab[]).map((t) => (
+        {NAV.map(({ id, label, icon: Icon }) => (
           <button
-            key={t}
-            className={tab === t ? 'active' : ''}
-            onClick={() => setTab(t)}
+            key={id}
+            className={tab === id ? 'active press' : 'press'}
+            onClick={() => setTab(id)}
           >
-            {t[0].toUpperCase() + t.slice(1)}
-            {t === 'study' && cards.length > 0 && (
+            <Icon />
+            {label}
+            {id === 'study' && cards.length > 0 && (
               <span className="count">{cards.length}</span>
             )}
           </button>
         ))}
       </nav>
-
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} {...fade}>
-          {tab === 'library' && (
-            <Library
-              papers={papers}
-              pages={pages}
-              openPaper={openPaper}
-              setOpenPaper={setOpenPaper}
-              goStudy={() => setTab('study')}
-              refresh={refresh}
-            />
-          )}
-          {tab === 'capture' && (
-            <Capture refresh={refresh} goLibrary={() => setTab('library')} />
-          )}
-          {tab === 'study' && <Study cards={cards} refresh={refresh} />}
-        </motion.div>
-      </AnimatePresence>
-    </>
+    </div>
   )
 }
 
-function Stat({ n, label }: { n: number | string; label: string }) {
+function Stat({ n, label, i }: { n: number | string; label: string; i: number }) {
   return (
-    <div className="stat">
-      <div className="stat-n">{n}</div>
+    <div className="stat fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
       <div className="stat-l">{label}</div>
+      <div className="stat-n">{n}</div>
     </div>
   )
 }
@@ -127,33 +190,36 @@ function Stat({ n, label }: { n: number | string; label: string }) {
 function ModelPanel() {
   const [ready, setReady] = useState(isModelReady())
   const [pct, setPct] = useState<number | null>(null)
-  const [err, setErr] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
 
   async function dl() {
     setPct(0)
-    setErr(false)
+    setErr(null)
     try {
       await prefetchModel(setPct)
       setReady(true)
       setPct(null)
-    } catch {
-      setErr(true)
+    } catch (e) {
       setPct(null)
+      setErr(e instanceof Error ? e.message : 'Download failed. Retry online.')
     }
   }
 
   if (ready)
     return (
       <div className="model ready">
-        <span className="dot" /> Offline AI on board — upgrades answers with
+        <span className="dot" /> Offline AI on board — answers upgrade with
         zero network
       </div>
     )
   return (
     <div className="model">
       <div className="model-row">
-        <span>Answers start instant. Download the 80MB offline brain for AI upgrades.</span>
-        <button className="btn" disabled={pct !== null} onClick={dl}>
+        <span>
+          Answers start instant. Download the 80MB offline brain for AI
+          upgrades.
+        </span>
+        <button className="btn press" disabled={pct !== null} onClick={dl}>
           {pct === null ? 'Download' : `${pct}%`}
         </button>
       </div>
@@ -162,7 +228,7 @@ function ModelPanel() {
           <div className="bar" style={{ width: `${pct}%` }} />
         </div>
       )}
-      {err && <div className="error">Download failed — instant answers still work. Retry online.</div>}
+      {err && <div className="error">{err}</div>}
     </div>
   )
 }
@@ -189,13 +255,14 @@ function Library({
   async function runExplain(page: Page) {
     setErr(null)
     // instant answer on screen in ms — no spinner staring contest
+    const quick = instant(page.text)
     await db.pages.update(page.id, {
-      explanation: instant(page.text),
+      explanation: quick,
       explainer: 'instant',
     })
     await db.cards.where('pageId').equals(page.id).delete()
     await db.cards.bulkAdd(
-      makeCards(page.text, instant(page.text)).map((c) => ({
+      makeCards(page.text, quick).map((c) => ({
         id: uid(),
         pageId: page.id,
         ...c,
@@ -260,15 +327,19 @@ function Library({
         {subjects.map((s) => (
           <button
             key={s}
-            className={filter === s ? 'active' : ''}
+            className={filter === s ? 'active press' : 'press'}
             onClick={() => setFilter(s)}
           >
             {s}
           </button>
         ))}
       </div>
-      {shown.map((p) => (
-        <div className="card" key={p.id}>
+      {shown.map((p, i) => (
+        <div
+          className="card card-interactive fade-in-up"
+          key={p.id}
+          style={{ animationDelay: `${Math.min(i, 5) * 60}ms` }}
+        >
           <h3>{p.title}</h3>
           <p>
             <span className="pill">{p.subject}</span>
@@ -280,7 +351,7 @@ function Library({
           </p>
           <div className="row">
             <button
-              className="btn ghost"
+              className="btn ghost press"
               onClick={() => setOpenPaper(openPaper === p.id ? null : p.id)}
             >
               {openPaper === p.id ? 'Hide' : 'Open'}
@@ -307,7 +378,10 @@ function Library({
                     </p>
                   )}
                   <div className="row">
-                    <button className="btn" onClick={() => runExplain(pg)}>
+                    <button
+                      className="btn press"
+                      onClick={() => runExplain(pg)}
+                    >
                       {pg.explanation
                         ? 'Explain again + rebuild cards'
                         : 'Explain instantly + make cards'}
@@ -319,7 +393,7 @@ function Library({
       ))}
       {err && <div className="error">{err}</div>}
       <div className="row">
-        <button className="btn ghost" onClick={exportAll}>
+        <button className="btn ghost press" onClick={exportAll}>
           Export JSON
         </button>
       </div>
@@ -399,7 +473,7 @@ function Capture({
   }
 
   return (
-    <div className="card">
+    <div className="card fade-in-up">
       <h3>Snap a past paper</h3>
       <p>Photo never leaves the device. OCR runs locally.</p>
       <input
@@ -411,11 +485,11 @@ function Capture({
         onChange={(e) => onFile(e.target.files?.[0])}
       />
       <div className="row">
-        <button className="btn" onClick={() => fileRef.current?.click()}>
+        <button className="btn press" onClick={() => fileRef.current?.click()}>
           Take / upload photo
         </button>
         <button
-          className="btn ghost"
+          className="btn ghost press"
           disabled={!preview || busy}
           onClick={runOcr}
         >
@@ -425,15 +499,23 @@ function Capture({
       {preview && (
         <img src={preview} alt="scan preview" className="preview" />
       )}
-      <textarea
-        className="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Extracted text lands here — edit before saving."
-      />
+      {busy ? (
+        <div style={{ marginTop: 10 }}>
+          <div className="skeleton" style={{ height: 18, marginBottom: 8 }} />
+          <div className="skeleton" style={{ height: 18, width: '80%', marginBottom: 8 }} />
+          <div className="skeleton" style={{ height: 18, width: '60%' }} />
+        </div>
+      ) : (
+        <textarea
+          className="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Extracted text lands here — edit before saving."
+        />
+      )}
       {err && <div className="error">{err}</div>}
       <div className="row">
-        <button className="btn" disabled={!text.trim()} onClick={save}>
+        <button className="btn press" disabled={!text.trim()} onClick={save}>
           Save to library
         </button>
       </div>
@@ -532,7 +614,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
           style={{ width: `${((idx % deck.length) / deck.length) * 100}%` }}
         />
       </div>
-      <div className="card">
+      <div className="card fade-in-up" key={card.id}>
         <p className="meta">
           card {(idx % deck.length) + 1} / {deck.length} · weakest first ·
           score {score.ok}/{score.total}
@@ -541,7 +623,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
         {opts.map((o, i) => (
           <button
             key={`${idx}-${i}`}
-            className={`quiz-opt${picked === null ? '' : o === card.back ? ' right' : picked === o ? ' wrong' : ''}`}
+            className={`quiz-opt press${picked === null ? '' : o === card.back ? ' right' : picked === o ? ' wrong' : ''}`}
             onClick={() => pick(o)}
             disabled={picked !== null}
           >
@@ -550,7 +632,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
         ))}
         {picked !== null && (
           <div className="row">
-            <button className="btn" onClick={next}>
+            <button className="btn press" onClick={next}>
               Next card
             </button>
           </div>

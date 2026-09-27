@@ -19,7 +19,18 @@ export function isModelReady() {
 export async function prefetchModel(
   onProgress?: (pct: number) => void,
 ): Promise<void> {
-  await getPipe(onProgress)
+  pipePromise = null // fresh attempt so retries actually retry
+  try {
+    await getPipe(onProgress)
+  } catch (e) {
+    pipePromise = null
+    const msg = e instanceof Error ? e.message : String(e)
+    if (/fetch|network|load failed|cdn|ENOTFOUND|ERR_NAME/i.test(msg))
+      throw new Error(
+        'Download blocked: this network cannot reach the model CDN (school/work wifi often blocks it). Retry on home wifi, or vendor the weights into public/models (see TODO.md). Instant answers keep working meanwhile.',
+      )
+    throw new Error(`Download failed (${msg}). Retry online.`)
+  }
   modelReady = true
   try {
     localStorage.setItem('gf-model', 'ready')
@@ -28,18 +39,36 @@ export async function prefetchModel(
   }
 }
 
-async function getPipe(onProgress?: (pct: number) => void) {
-  if (!pipePromise) {
-    pipePromise = (async () => {
-      const { pipeline } = await import('@huggingface/transformers')
-      return pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-77M', {
-        progress_callback: (p: { progress?: number; status?: string }) => {
-          if (typeof p.progress === 'number')
-            onProgress?.(Math.round(p.progress))
-        },
-      })
-    })()
+const MODEL = 'Xenova/LaMini-Flan-T5-77M'
+// Drop-in vendored weights: copy the model snapshot to public/models/<MODEL>
+// (config.json, tokenizer files, onnx/model_quantized.onnx). Loads first,
+// CDN second. Vendoring also survives school networks that block HF's CDN.
+const LOCAL_BASE = '/models/'
+
+async function loadPipe(onProgress?: (pct: number) => void) {
+  const { pipeline, env } = await import('@huggingface/transformers')
+  env.localModelPath = LOCAL_BASE
+  const cb = (p: { progress?: number }) => {
+    if (typeof p.progress === 'number') onProgress?.(Math.round(p.progress))
   }
+  try {
+    env.allowRemoteModels = false
+    return await pipeline('text2text-generation', MODEL, {
+      progress_callback: cb,
+    })
+  } catch {
+    env.allowRemoteModels = true
+    return await pipeline('text2text-generation', MODEL, {
+      progress_callback: cb,
+    })
+  } finally {
+    env.allowRemoteModels = true
+  }
+}
+
+async function getPipe(onProgress?: (pct: number) => void) {
+  if (!pipePromise) pipePromise = loadPipe(onProgress)
+  else if (onProgress) onProgress(100)
   return pipePromise
 }
 

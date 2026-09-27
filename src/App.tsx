@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { explain, makeCards } from './lib/ai'
 import { db, uid, type Card, type Page, type Paper } from './lib/db'
@@ -21,6 +22,13 @@ function useOnline() {
   return online
 }
 
+const fade = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.22 },
+}
+
 export default function App() {
   const online = useOnline()
   const [tab, setTab] = useState<Tab>('library')
@@ -28,28 +36,47 @@ export default function App() {
   const [pages, setPages] = useState<Page[]>([])
   const [openPaper, setOpenPaper] = useState<string | null>(null)
   const [cards, setCards] = useState<Card[]>([])
+  const [attempts, setAttempts] = useState<{ correct: boolean }[]>([])
 
   const refresh = useCallback(async () => {
     await ensureSeed()
     setPapers(await db.papers.toArray())
     setPages(await db.pages.toArray())
     setCards(await db.cards.toArray())
+    setAttempts(
+      (await db.attempts.toArray()).map((a) => ({ correct: a.correct })),
+    )
   }, [])
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
+  const ok = attempts.filter((a) => a.correct).length
+
   return (
     <>
       <header className="top">
-        <div className="brand">
-          Grid<span>Fail</span>
+        <div>
+          <div className="brand">
+            Grid<span>Fail</span>
+          </div>
+          <div className="tagline">study when the grid fails</div>
         </div>
         <div className={`net-pill ${online ? 'on' : 'off'}`}>
           {online ? '● ONLINE' : '○ OFFLINE — fully working'}
         </div>
       </header>
+
+      <section className="stats">
+        <Stat n={papers.length} label="papers" />
+        <Stat n={pages.length} label="pages" />
+        <Stat n={cards.length} label="cards" />
+        <Stat
+          n={attempts.length ? `${Math.round((ok / attempts.length) * 100)}%` : '—'}
+          label="accuracy"
+        />
+      </section>
 
       <nav className="tabs">
         {(['library', 'capture', 'study'] as Tab[]).map((t) => (
@@ -59,23 +86,41 @@ export default function App() {
             onClick={() => setTab(t)}
           >
             {t[0].toUpperCase() + t.slice(1)}
+            {t === 'study' && cards.length > 0 && (
+              <span className="count">{cards.length}</span>
+            )}
           </button>
         ))}
       </nav>
 
-      {tab === 'library' && (
-        <Library
-          papers={papers}
-          pages={pages}
-          openPaper={openPaper}
-          setOpenPaper={setOpenPaper}
-          goStudy={() => setTab('study')}
-          refresh={refresh}
-        />
-      )}
-      {tab === 'capture' && <Capture refresh={refresh} goLibrary={() => setTab('library')} />}
-      {tab === 'study' && <Study cards={cards} refresh={refresh} />}
+      <AnimatePresence mode="wait">
+        <motion.div key={tab} {...fade}>
+          {tab === 'library' && (
+            <Library
+              papers={papers}
+              pages={pages}
+              openPaper={openPaper}
+              setOpenPaper={setOpenPaper}
+              goStudy={() => setTab('study')}
+              refresh={refresh}
+            />
+          )}
+          {tab === 'capture' && (
+            <Capture refresh={refresh} goLibrary={() => setTab('library')} />
+          )}
+          {tab === 'study' && <Study cards={cards} refresh={refresh} />}
+        </motion.div>
+      </AnimatePresence>
     </>
+  )
+}
+
+function Stat({ n, label }: { n: number | string; label: string }) {
+  return (
+    <div className="stat">
+      <div className="stat-n">{n}</div>
+      <div className="stat-l">{label}</div>
+    </div>
   )
 }
 
@@ -96,6 +141,8 @@ function Library({
 }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [filter, setFilter] = useState<string>('All')
+  const subjects = ['All', ...new Set(papers.map((p) => p.subject))]
 
   async function runExplain(page: Page) {
     setBusy(page.id)
@@ -106,6 +153,7 @@ function Library({
         explanation: out,
         explainer: by === 'cloud' ? 'cloud' : 'local',
       })
+      await db.cards.where('pageId').equals(page.id).delete()
       const made = makeCards(page.text, out)
       await db.cards.bulkAdd(
         made.map((c) => ({ id: uid(), pageId: page.id, ...c })),
@@ -119,15 +167,56 @@ function Library({
     }
   }
 
+  async function exportAll() {
+    const data = {
+      papers,
+      pages: await db.pages.toArray(),
+      cards: await db.cards.toArray(),
+      attempts: await db.attempts.toArray(),
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'gridfail-export.json'
+    a.click()
+  }
+
+  const shown =
+    filter === 'All' ? papers : papers.filter((p) => p.subject === filter)
+
+  if (papers.length === 0)
+    return (
+      <div className="card empty">
+        <h3>No papers yet</h3>
+        <p>Hit Capture, snap a past paper, it lands here.</p>
+      </div>
+    )
+
   return (
     <div>
-      {papers.map((p) => (
+      <div className="chips">
+        {subjects.map((s) => (
+          <button
+            key={s}
+            className={filter === s ? 'active' : ''}
+            onClick={() => setFilter(s)}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      {shown.map((p) => (
         <div className="card" key={p.id}>
           <h3>{p.title}</h3>
           <p>
             <span className="pill">{p.subject}</span>
             <span className="pill">{p.year}</span>
             <span className="pill">{p.source}</span>
+            <span className="pill">
+              {pages.filter((pg) => pg.paperId === p.id).length} pages
+            </span>
           </p>
           <div className="row">
             <button
@@ -141,10 +230,10 @@ function Library({
             pages
               .filter((pg) => pg.paperId === p.id)
               .map((pg) => (
-                <div className="card" key={pg.id} style={{ marginTop: 10 }}>
-                  <p style={{ color: 'var(--text)' }}>{pg.text}</p>
+                <div className="card sub" key={pg.id}>
+                  <p className="body">{pg.text}</p>
                   {pg.explanation && (
-                    <p>
+                    <p className="explain">
                       <span
                         className={`pill ${pg.explainer === 'cloud' ? 'cloud' : 'local'}`}
                       >
@@ -171,8 +260,30 @@ function Library({
         </div>
       ))}
       {err && <div className="error">{err}</div>}
+      <div className="row">
+        <button className="btn ghost" onClick={exportAll}>
+          Export JSON
+        </button>
+      </div>
     </div>
   )
+}
+
+function downscale(dataUrl: string, max = 1600): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height))
+      if (s === 1) return resolve(dataUrl)
+      const c = document.createElement('canvas')
+      c.width = Math.round(img.width * s)
+      c.height = Math.round(img.height * s)
+      c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height)
+      resolve(c.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = () => resolve(dataUrl)
+    img.src = dataUrl
+  })
 }
 
 function Capture({
@@ -191,7 +302,7 @@ function Capture({
   function onFile(f: File | undefined) {
     if (!f) return
     const r = new FileReader()
-    r.onload = () => setPreview(String(r.result))
+    r.onload = async () => setPreview(await downscale(String(r.result)))
     r.readAsDataURL(f)
   }
 
@@ -200,8 +311,7 @@ function Capture({
     setBusy(true)
     setErr(null)
     try {
-      const t = await ocrImage(preview)
-      setText(t)
+      setText(await ocrImage(preview))
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'OCR failed.')
     } finally {
@@ -246,16 +356,16 @@ function Capture({
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Take / upload photo
         </button>
-        <button className="btn ghost" disabled={!preview || busy} onClick={runOcr}>
+        <button
+          className="btn ghost"
+          disabled={!preview || busy}
+          onClick={runOcr}
+        >
           {busy ? 'Reading…' : 'Read text'}
         </button>
       </div>
       {preview && (
-        <img
-          src={preview}
-          alt="scan preview"
-          style={{ width: '100%', borderRadius: 10, marginTop: 12 }}
-        />
+        <img src={preview} alt="scan preview" className="preview" />
       )}
       <textarea
         className="text"
@@ -273,9 +383,18 @@ function Capture({
   )
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void> }) {
   const [idx, setIdx] = useState(0)
-  const [show, setShow] = useState(false)
+  const [picked, setPicked] = useState<string | null>(null)
   const [score, setScore] = useState<{ ok: number; total: number }>({
     ok: 0,
     total: 0,
@@ -292,52 +411,70 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
 
   if (cards.length === 0)
     return (
-      <div className="card">
+      <div className="card empty">
         <h3>No cards yet</h3>
         <p>Open Library, pick a paper, hit Explain + make cards.</p>
       </div>
     )
 
-  const card = cards[Math.min(idx, cards.length - 1)]
+  const card = cards[idx % cards.length]
+  const opts = useMemo(() => {
+    const distractors = shuffle(
+      cards.filter((c) => c.id !== card.id).map((c) => c.back),
+    ).slice(0, 3)
+    return shuffle([card.back, ...distractors])
+  }, [cards, card])
 
-  async function grade(ok: boolean) {
+  async function pick(o: string) {
+    if (picked !== null) return
+    setPicked(o)
+    const correct = o === card.back
     await db.attempts.add({
       id: uid(),
       pageId: card.pageId,
-      correct: ok,
+      correct,
       createdAt: Date.now(),
     })
-    setScore((s) => ({ ok: s.ok + (ok ? 1 : 0), total: s.total + 1 }))
-    setShow(false)
+    setScore((s) => ({ ok: s.ok + (correct ? 1 : 0), total: s.total + 1 }))
+  }
+
+  function next() {
+    setPicked(null)
     setIdx((i) => (i + 1) % cards.length)
     refresh()
   }
 
   return (
     <div>
+      <div className="progress">
+        <div
+          className="bar"
+          style={{ width: `${((idx % cards.length) / cards.length) * 100}%` }}
+        />
+      </div>
       <div className="card">
         <p className="meta">
-          card {Math.min(idx + 1, cards.length)} / {cards.length} · score{' '}
-          {score.ok}/{score.total}
+          card {(idx % cards.length) + 1} / {cards.length} · score {score.ok}/
+          {score.total}
         </p>
-        <h3 style={{ marginTop: 8 }}>{card.front}</h3>
-        {show && <p style={{ color: 'var(--text)' }}>{card.back}</p>}
-        <div className="row">
-          {!show ? (
-            <button className="btn" onClick={() => setShow(true)}>
-              Reveal
+        <h3 className="q">{card.front}</h3>
+        {opts.map((o, i) => (
+          <button
+            key={`${idx}-${i}`}
+            className={`quiz-opt${picked === null ? '' : o === card.back ? ' right' : picked === o ? ' wrong' : ''}`}
+            onClick={() => pick(o)}
+            disabled={picked !== null}
+          >
+            {o}
+          </button>
+        ))}
+        {picked !== null && (
+          <div className="row">
+            <button className="btn" onClick={next}>
+              Next card
             </button>
-          ) : (
-            <>
-              <button className="btn" onClick={() => grade(true)}>
-                Got it
-              </button>
-              <button className="btn ghost" onClick={() => grade(false)}>
-                Missed
-              </button>
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

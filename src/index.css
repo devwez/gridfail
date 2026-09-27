@@ -50,10 +50,118 @@ header.top {
 .brand {
   font-weight: 800;
   letter-spacing: -0.5px;
-  font-size: 20px;
+  font-size: 22px;
 }
 .brand span {
   color: var(--accent);
+}
+.tagline {
+  font-size: 12px;
+  color: var(--faint);
+  letter-spacing: 0.4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 4px 4px 12px;
+}
+.stat {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.stat-n {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.stat-l {
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+nav.tabs button .count {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+  background: var(--accent);
+  color: #0a0a0f;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px 12px;
+  flex-wrap: wrap;
+}
+.chips button {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.chips button.active {
+  color: #0a0a0f;
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.card.sub {
+  background: var(--bg-elev);
+}
+.card.empty {
+  text-align: center;
+  padding: 32px 16px;
+}
+.card .body {
+  color: var(--text);
+}
+.card .explain {
+  color: var(--muted);
+  white-space: pre-line;
+  font-size: 14px;
+}
+
+img.preview {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+}
+
+.progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  margin: 0 4px 12px;
+  overflow: hidden;
+}
+.progress .bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.25s ease-out;
+}
+
+.q {
+  margin-top: 8px;
+  line-height: 1.4;
 }
 
 .net-pill {

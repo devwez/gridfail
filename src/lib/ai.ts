@@ -48,7 +48,7 @@ const LOCAL_BASE = '/models/'
 async function loadPipe(onProgress?: (pct: number) => void) {
   const { pipeline, env } = await import('@huggingface/transformers')
   env.localModelPath = LOCAL_BASE
-  const cb = (p: { progress?: number }) => {
+  const cb = (p: { progress?: number; status?: string; [k: string]: unknown }) => {
     if (typeof p.progress === 'number') onProgress?.(Math.round(p.progress))
   }
   try {

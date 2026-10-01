@@ -208,6 +208,19 @@ header.top {
   font-weight: 600;
   color: var(--emerald);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-n {
+    font-size: 22px;
+  }
+  header.top {
+    flex-wrap: wrap;
+  }
 }
 
 /* bottom tab bar (mobile) */

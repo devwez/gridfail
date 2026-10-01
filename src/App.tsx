@@ -584,7 +584,16 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
         .filter((c): c is Card => !!c)
     : cards
 
-  if (deck.length === 0)
+  const card = deck.length ? deck[idx % deck.length] : null
+  const opts = useMemo(() => {
+    if (!card) return []
+    const distractors = shuffle(
+      cards.filter((c) => c.id !== card.id).map((c) => c.back),
+    ).slice(0, 3)
+    return shuffle([card.back, ...distractors])
+  }, [cards, card])
+
+  if (!card)
     return (
       <div className="card empty">
         <h3>No cards yet</h3>
@@ -592,16 +601,8 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
       </div>
     )
 
-  const card = deck[idx % deck.length]
-  const opts = useMemo(() => {
-    const distractors = shuffle(
-      cards.filter((c) => c.id !== card.id).map((c) => c.back),
-    ).slice(0, 3)
-    return shuffle([card.back, ...distractors])
-  }, [cards, card])
-
   async function pick(o: string) {
-    if (picked !== null) return
+    if (picked !== null || !card) return
     setPicked(o)
     const correct = o === card.back
     await db.attempts.add({

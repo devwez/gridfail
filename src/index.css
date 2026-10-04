@@ -2,6 +2,7 @@
   /* qura-app tokens: green-tinted dark, quiet, no glow spam */
   --bg: oklch(0.09 0.012 155);
   --surface: oklch(0.15 0.014 155);
+  --surface-deep: oklch(0.115 0.013 155);
   --surface-hover: oklch(0.19 0.016 155);
   --border: oklch(0.24 0.018 155);
   --text: oklch(0.96 0.006 155);
@@ -146,7 +147,8 @@ main.col {
 }
 .side nav button.active {
   color: var(--text);
-  background: var(--surface);
+  background: var(--emerald-dim);
+  box-shadow: inset 2px 0 0 var(--emerald);
 }
 .side nav button svg {
   flex-shrink: 0;
@@ -173,17 +175,17 @@ header.top {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.3px;
-  font-size: 24px;
+  font-size: 21px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .brandmark {
-  height: 54px;
+  height: 36px;
   width: auto;
 }
 .side .brandmark {
-  height: 46px;
+  height: 32px;
 }
 .brand span {
   color: var(--emerald);
@@ -197,9 +199,10 @@ header.top {
 
 .net-pill {
   font-family: var(--mono);
-  font-size: 12px;
-  padding: 6px 12px;
-  min-height: 44px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  padding: 7px 14px;
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
@@ -218,33 +221,74 @@ header.top {
   border-color: oklch(0.79 0.15 156 / 0.45);
 }
 
-/* stat tiles */
+/* view header: eyebrow + title + lede, one per tab */
+.view-head {
+  padding: 6px 4px 18px;
+}
+.view-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--emerald);
+  margin-bottom: 6px;
+}
+.view-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 0 0 6px;
+}
+.view-lede {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+/* stat tiles — number leads, label whispers; accuracy tile lit */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  padding: 0 0 16px;
+  padding: 0 0 20px;
 }
 .stat {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 12px;
+  border-radius: 16px;
+  padding: 14px 14px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 .stat-l {
-  font-size: 12px;
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--faint);
+  order: -1;
 }
 .stat-n {
-  font-size: 26px;
-  font-weight: 600;
-  color: var(--emerald);
-  line-height: 1.1;
+  font-size: 30px;
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
+}
+.stat.hot {
+  background: var(--emerald-dim);
+  border-color: oklch(0.79 0.15 156 / 0.4);
+}
+.stat.hot .stat-n {
+  color: var(--emerald);
 }
 
 @media (max-width: 560px) {
@@ -293,6 +337,13 @@ nav.tabs button {
 }
 nav.tabs button.active {
   color: var(--emerald);
+}
+nav.tabs button.active::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--emerald);
 }
 nav.tabs button .count {
   font-size: 10px;
@@ -370,8 +421,23 @@ nav.tabs button .count {
 
 .card h3 {
   margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+}
+/* pills left, action right — kills dead space on wide cards */
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+.card-foot p {
+  margin: 0;
+}
+.card-foot .btn {
+  flex-shrink: 0;
 }
 .card p {
   margin: 4px 0;
@@ -392,11 +458,31 @@ nav.tabs button .count {
   font-size: 14px;
 }
 .card.sub {
-  background: oklch(0.12 0.013 155);
+  background: var(--surface-deep);
+  border-left: 2px solid oklch(0.79 0.15 156 / 0.5);
 }
 .card.empty {
   text-align: center;
-  padding: 40px 16px;
+  padding: 48px 20px;
+  border-style: dashed;
+}
+.empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--emerald-dim);
+  color: var(--emerald);
+}
+.card.empty h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.card.empty .row {
+  justify-content: center;
 }
 
 .row {
@@ -409,23 +495,43 @@ nav.tabs button .count {
 button.btn {
   font: inherit;
   font-size: 14px;
-  font-weight: 500;
-  padding: 10px 16px;
+  font-weight: 600;
+  padding: 10px 18px;
   min-height: 44px;
   border-radius: 12px;
-  border: 1px solid oklch(0.79 0.15 156 / 0.45);
-  background: var(--emerald-dim);
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
   color: var(--text);
   cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    transform 100ms var(--ease-out);
+}
+button.btn:hover:not(:disabled) {
+  border-color: oklch(0.79 0.15 156 / 0.45);
+}
+button.btn.primary {
+  background: var(--emerald);
+  border-color: var(--emerald);
+  color: oklch(0.12 0.02 155);
+}
+button.btn.primary:hover:not(:disabled) {
+  background: oklch(0.83 0.14 156);
 }
 button.btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 button.btn.ghost {
-  border-color: var(--border);
+  border-color: transparent;
   background: transparent;
   color: var(--muted);
+  font-weight: 500;
+}
+button.btn.ghost:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface);
 }
 
 .chips {
@@ -508,11 +614,11 @@ img.preview {
 }
 
 .progress {
-  height: 6px;
+  height: 8px;
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--surface-deep);
   border: 1px solid var(--border);
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   overflow: hidden;
 }
 .progress .bar {
@@ -528,30 +634,63 @@ img.preview {
 }
 
 .quiz-opt {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   width: 100%;
   text-align: left;
   margin-top: 8px;
-  padding: 12px 14px;
-  min-height: 48px;
-  border-radius: 12px;
+  padding: 13px 14px;
+  min-height: 52px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  background: oklch(0.12 0.013 155);
+  background: var(--surface-deep);
   color: var(--text);
   font: inherit;
   font-size: 14px;
+  line-height: 1.45;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .quiz-opt:hover:not(:disabled) {
-  border-color: var(--emerald);
+  border-color: oklch(0.79 0.15 156 / 0.55);
+  background: var(--surface);
+}
+.quiz-opt .qkey {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--surface-hover);
+  color: var(--muted);
+  margin-top: 1px;
 }
 .quiz-opt.right {
   border-color: var(--emerald);
   background: var(--emerald-dim);
 }
+.quiz-opt.right .qkey {
+  background: var(--emerald);
+  color: oklch(0.12 0.02 155);
+}
 .quiz-opt.wrong {
   border-color: var(--danger);
+  background: oklch(0.62 0.18 25 / 0.08);
+}
+.quiz-opt.wrong .qkey {
+  background: oklch(0.62 0.18 25 / 0.25);
+  color: oklch(0.8 0.1 25);
+}
+.quiz-opt:disabled {
+  cursor: default;
 }
 
 .model {

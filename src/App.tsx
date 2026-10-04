@@ -132,7 +132,7 @@ export default function App() {
       </a>
       <aside className="side">
         <div className="brand">
-              <img src="/mark.png" alt="GridFail mark" className="brandmark" width="72" height="54" />
+              <img src="/mark.png" alt="GridFail mark" className="brandmark" width="40" height="30" />
           Grid<span>Fail</span>
         </div>
         <nav aria-label="Primary" role="tablist" aria-orientation="vertical">
@@ -151,7 +151,7 @@ export default function App() {
         <div className="foot">
           {online ? '● online' : '○ offline mode'}
           <br />
-          zero backend · v0.4
+          zero backend · v0.1.0
         </div>
       </aside>
 
@@ -159,7 +159,7 @@ export default function App() {
         <header className="top">
           <div className="brandcol">
             <div className="brand">
-          <img src="/mark.png" alt="GridFail mark" className="brandmark" width="61" height="46" />
+          <img src="/mark.png" alt="GridFail mark" className="brandmark" width="36" height="27" />
               Grid<span>Fail</span>
             </div>
             <div className="tagline">study when the grid fails</div>
@@ -177,6 +177,7 @@ export default function App() {
             n={attempts.length ? `${Math.round((ok / attempts.length) * 100)}%` : '—'}
             label="accuracy"
             i={3}
+            hot
           />
         </section>
 
@@ -190,13 +191,14 @@ export default function App() {
                 openPaper={openPaper}
                 setOpenPaper={setOpenPaper}
                 goStudy={() => setTab('study')}
+                goCapture={() => setTab('capture')}
                 refresh={refresh}
               />
             )}
             {tab === 'capture' && (
               <Capture refresh={refresh} goLibrary={() => setTab('library')} />
             )}
-            {tab === 'study' && <Study cards={cards} refresh={refresh} />}
+            {tab === 'study' && <Study cards={cards} refresh={refresh} goLibrary={() => setTab('library')} />}
           </motion.div>
           </MotionConfig>
         </AnimatePresence>
@@ -221,11 +223,21 @@ export default function App() {
   )
 }
 
-function Stat({ n, label, i }: { n: number | string; label: string; i: number }) {
+function Stat({ n, label, i, hot }: { n: number | string; label: string; i: number; hot?: boolean }) {
   return (
-    <div className="stat fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
+    <div className={`stat fade-in-up${hot ? ' hot' : ''}`} style={{ animationDelay: `${i * 60}ms` }}>
       <div className="stat-l">{label}</div>
       <div className="stat-n">{n}</div>
+    </div>
+  )
+}
+
+function ViewHead({ eyebrow, title, lede }: { eyebrow: string; title: string; lede: string }) {
+  return (
+    <div className="view-head">
+      <div className="view-eyebrow">{eyebrow}</div>
+      <h2 className="view-title">{title}</h2>
+      <p className="view-lede">{lede}</p>
     </div>
   )
 }
@@ -289,6 +301,7 @@ function Library({
   openPaper,
   setOpenPaper,
   goStudy,
+  goCapture,
   refresh,
 }: {
   papers: Paper[]
@@ -296,6 +309,7 @@ function Library({
   openPaper: string | null
   setOpenPaper: (id: string | null) => void
   goStudy: () => void
+  goCapture: () => void
   refresh: () => Promise<void>
 }) {
   const [err, setErr] = useState<string | null>(null)
@@ -364,14 +378,34 @@ function Library({
 
   if (papers.length === 0)
     return (
-      <div className="card empty">
-        <h3>No papers yet</h3>
-        <p>No scans saved on this device yet. Capture tab photographs a page, reads text offline.</p>
+      <div>
+        <ViewHead
+          eyebrow="Library"
+          title="Your papers live here"
+          lede="Seeded practice sets and your scans. Everything on this device, nothing in a cloud."
+        />
+        <div className="card empty">
+          <div className="empty-icon" aria-hidden="true">
+            <BookIcon />
+          </div>
+          <h3>No papers yet</h3>
+          <p>Photograph a past paper and the text lands here, ready to explain.</p>
+          <div className="row">
+            <button className="btn primary press" onClick={goCapture}>
+              Capture a page
+            </button>
+          </div>
+        </div>
       </div>
     )
 
   return (
     <div>
+      <ViewHead
+        eyebrow="Library"
+        title="Your papers live here"
+        lede="Seeded practice sets and your scans. Everything on this device, nothing in a cloud."
+      />
       <ModelPanel />
       <div className="chips">
         {subjects.map((s) => (
@@ -392,15 +426,15 @@ function Library({
           style={{ animationDelay: `${Math.min(i, 5) * 60}ms` }}
         >
           <h3>{p.title}</h3>
-          <p>
-            <span className="pill">{p.subject}</span>
-            <span className="pill">{p.year}</span>
-            <span className="pill">{p.source}</span>
-            <span className="pill">
-              {pages.filter((pg) => pg.paperId === p.id).length} pages
-            </span>
-          </p>
-          <div className="row">
+          <div className="card-foot">
+            <p>
+              <span className="pill">{p.subject}</span>
+              <span className="pill">{p.year}</span>
+              <span className="pill">{p.source}</span>
+              <span className="pill">
+                {pages.filter((pg) => pg.paperId === p.id).length} pages
+              </span>
+            </p>
             <button
               className="btn ghost press"
               onClick={() => setOpenPaper(openPaper === p.id ? null : p.id)}
@@ -430,7 +464,7 @@ function Library({
                   )}
                   <div className="row">
                     <button
-                      className="btn press"
+                      className="btn primary press"
                       onClick={() => runExplain(pg)}
                     >
                       {pg.explanation
@@ -524,9 +558,13 @@ function Capture({
   }
 
   return (
-    <div className="card fade-in-up">
-      <h3>Snap a past paper</h3>
-      <p>Photo never leaves the device. OCR runs locally.</p>
+    <div>
+      <ViewHead
+        eyebrow="Capture"
+        title="Snap a past paper"
+        lede="The photo never leaves this device. Text is read on-device, then saved to your library."
+      />
+      <div className="card fade-in-up">
       <input
         ref={fileRef}
         type="file"
@@ -537,7 +575,7 @@ function Capture({
         onChange={(e) => onFile(e.target.files?.[0])}
       />
       <div className="row">
-        <button className="btn press" onClick={() => fileRef.current?.click()}>
+        <button className="btn primary press" onClick={() => fileRef.current?.click()}>
           Take / upload photo
         </button>
         <button
@@ -569,9 +607,10 @@ function Capture({
       {busy && <div className="sr-only" role="status">Reading text…</div>}
       {err && <div className="error" role="alert">{err}</div>}
       <div className="row">
-        <button className="btn press" disabled={!text.trim()} onClick={save}>
+        <button className="btn primary press" disabled={!text.trim()} onClick={save}>
           Save to library
         </button>
+      </div>
       </div>
     </div>
   )
@@ -586,7 +625,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void> }) {
+function Study({ cards, refresh, goLibrary }: { cards: Card[]; refresh: () => Promise<void>; goLibrary: () => void }) {
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [score, setScore] = useState<{ ok: number; total: number }>({
@@ -636,9 +675,24 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
 
   if (!card)
     return (
-      <div className="card empty">
-        <h3>No cards yet</h3>
-        <p>Nothing to drill yet. Explain a page in Library and cards appear here.</p>
+      <div>
+        <ViewHead
+          eyebrow="Study"
+          title="Drill your weak spots"
+          lede="Multiple choice, weakest first. Scores persist on this device."
+        />
+        <div className="card empty">
+          <div className="empty-icon" aria-hidden="true">
+            <CardsIcon />
+          </div>
+          <h3>Nothing to drill yet</h3>
+          <p>Explain a page in the library and flashcards appear here.</p>
+          <div className="row">
+            <button className="btn primary press" onClick={goLibrary}>
+              Open library
+            </button>
+          </div>
+        </div>
       </div>
     )
 
@@ -663,6 +717,11 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
 
   return (
     <div>
+      <ViewHead
+        eyebrow="Study"
+        title="Drill your weak spots"
+        lede="Multiple choice, weakest first. Scores persist on this device."
+      />
       <div
         className="progress"
         role="progressbar"
@@ -689,12 +748,13 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
             onClick={() => pick(o)}
             disabled={picked !== null}
           >
-            {o}
+            <span className="qkey" aria-hidden="true">{'ABCD'[i] ?? '•'}</span>
+            <span>{o}</span>
           </button>
         ))}
         {picked !== null && (
           <div className="row" aria-live="polite">
-            <button className="btn press" onClick={next} autoFocus>
+            <button className="btn primary press" onClick={next} autoFocus>
               Next card
             </button>
           </div>

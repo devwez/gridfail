@@ -100,20 +100,47 @@ export default function App() {
 
   const ok = attempts.filter((a) => a.correct).length
 
+  // Roving tabindex tablist: arrows move, selection follows focus.
+  // Focus stays in the nav where the key was pressed (sidebar + mobile tabs
+  // both stay mounted, so query the sibling buttons, not a shared ref).
+  const onTabKey = (e: React.KeyboardEvent, id: Tab) => {
+    const i = NAV.findIndex((n) => n.id === id)
+    let next: number | null = null
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % NAV.length
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
+      next = (i - 1 + NAV.length) % NAV.length
+    else if (e.key === 'Home') next = 0
+    else if (e.key === 'End') next = NAV.length - 1
+    if (next === null) return
+    e.preventDefault()
+    setTab(NAV[next].id)
+    const sibs = e.currentTarget.parentElement?.querySelectorAll('[role="tab"]')
+    ;(sibs?.[next] as HTMLElement | undefined)?.focus()
+  }
+  const tabBtn = (id: Tab) => ({
+    role: 'tab' as const,
+    'aria-selected': tab === id,
+    tabIndex: tab === id ? 0 : -1,
+    onKeyDown: (e: React.KeyboardEvent) => onTabKey(e, id),
+    onClick: () => setTab(id),
+  })
+
   return (
     <div className="shell">
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
       <aside className="side">
         <div className="brand">
               <img src="/mark.png" alt="GridFail mark" className="brandmark" width="72" height="54" />
           Grid<span>Fail</span>
         </div>
-        <nav aria-label="Primary">
+        <nav aria-label="Primary" role="tablist" aria-orientation="vertical">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              aria-pressed={tab === id}
               className={tab === id ? 'active press' : 'press'}
-              onClick={() => setTab(id)}
+              {...tabBtn(id)}
             >
               <Icon />
               {label}
@@ -128,7 +155,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="col">
+      <main className="col" id="main" tabIndex={-1}>
         <header className="top">
           <div className="brandcol">
             <div className="brand">
@@ -155,7 +182,7 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           <MotionConfig reducedMotion="user">
-          <motion.div key={tab} {...fade}>
+          <motion.div key={tab} {...fade} role="tabpanel" aria-label={`${tab} panel`}>
             {tab === 'library' && (
               <Library
                 papers={papers}
@@ -175,13 +202,12 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <nav className="tabs" aria-label="Sections">
+      <nav className="tabs" aria-label="Sections" role="tablist">
         {NAV.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            aria-pressed={tab === id}
             className={tab === id ? 'active press' : 'press'}
-            onClick={() => setTab(id)}
+            {...tabBtn(id)}
           >
             <Icon />
             {label}

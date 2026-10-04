@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "render:demo": "remotion render remotion/index.ts GridFailDemo out/gridfail-demo.mp4"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",

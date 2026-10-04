@@ -1,13 +1,16 @@
-import { createWorker } from 'tesseract.js'
+import type { createWorker as createWorkerType } from 'tesseract.js'
 
-let workerPromise: Promise<Awaited<ReturnType<typeof createWorker>>> | null =
-  null
+// tesseract.js rides a dynamic import — first paint never pays for OCR.
+// Type-only import above erases at compile, pulls zero bytes into bundle.
+let workerPromise: Promise<
+  Awaited<ReturnType<typeof createWorkerType>>
+> | null = null
 
 async function getWorker() {
   if (!workerPromise) {
     workerPromise = (async () => {
-      const w = await createWorker('eng')
-      return w
+      const { createWorker } = await import('tesseract.js')
+      return await createWorker('eng')
     })()
   }
   return workerPromise

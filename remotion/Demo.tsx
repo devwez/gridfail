@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 
 export const DEMO_FPS = 30;
-export const DEMO_FRAMES = 2700; // 90s
+export const DEMO_FRAMES = 2760; // 92s — matches voiceover.mp3 (92s)
 
 const BG = '#0a0a0f';
 const GREEN = '#7dd87d';
@@ -219,12 +219,16 @@ export const Demo: React.FC = () => {
       </Sequence>
       <Sequence from={2040} durationInFrames={450}>
         <TechCard />
+        <Caption
+          text="Zero backend. OCR, AI, storage — all on-device."
+          sub="Dexie IndexedDB · Transformers.js · Tesseract, all cached offline."
+        />
       </Sequence>
-      <Sequence from={2490} durationInFrames={210}>
+      <Sequence from={2490} durationInFrames={270}>
         <TitleCard
-          kicker="GRIDFAIL"
-          title="github.com/devwez/gridfail"
-          accent="Built for OFFGRID · by @devwez"
+          kicker="GRIDFAIL — TRY IT LIVE"
+          title="gridfail.vercel.app"
+          accent="Study when the grid fails · github.com/devwez/gridfail"
         />
       </Sequence>
     </AbsoluteFill>

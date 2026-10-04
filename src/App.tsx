@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { instant, isModelReady, makeCards, prefetchModel, upgrade } from './lib/ai'
@@ -104,13 +104,14 @@ export default function App() {
     <div className="shell">
       <aside className="side">
         <div className="brand">
-          <img src="/mark.png" alt="GridFail mark" className="brandmark" />
+              <img src="/mark.png" alt="GridFail mark" className="brandmark" width="72" height="54" />
           Grid<span>Fail</span>
         </div>
-        <nav>
+        <nav aria-label="Primary">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              aria-pressed={tab === id}
               className={tab === id ? 'active press' : 'press'}
               onClick={() => setTab(id)}
             >
@@ -131,12 +132,12 @@ export default function App() {
         <header className="top">
           <div className="brandcol">
             <div className="brand">
-              <img src="/mark.png" alt="GridFail mark" className="brandmark" />
+          <img src="/mark.png" alt="GridFail mark" className="brandmark" width="61" height="46" />
               Grid<span>Fail</span>
             </div>
             <div className="tagline">study when the grid fails</div>
           </div>
-          <div className={`net-pill ${online ? 'on' : 'off'}`}>
+          <div className={`net-pill ${online ? 'on' : 'off'}`} role="status">
             {online ? '● ONLINE' : '○ OFFLINE — fully working'}
           </div>
         </header>
@@ -153,6 +154,7 @@ export default function App() {
         </section>
 
         <AnimatePresence mode="wait">
+          <MotionConfig reducedMotion="user">
           <motion.div key={tab} {...fade}>
             {tab === 'library' && (
               <Library
@@ -169,13 +171,15 @@ export default function App() {
             )}
             {tab === 'study' && <Study cards={cards} refresh={refresh} />}
           </motion.div>
+          </MotionConfig>
         </AnimatePresence>
       </main>
 
-      <nav className="tabs">
+      <nav className="tabs" aria-label="Sections">
         {NAV.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            aria-pressed={tab === id}
             className={tab === id ? 'active press' : 'press'}
             onClick={() => setTab(id)}
           >
@@ -237,11 +241,18 @@ function ModelPanel() {
         </button>
       </div>
       {pct !== null && (
-        <div className="progress">
+        <div
+          className="progress"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct}
+          aria-label="Model download progress"
+        >
           <div className="bar" style={{ width: `${pct}%` }} />
         </div>
       )}
-      {err && <div className="error">{err}</div>}
+      {err && <div className="error" role="alert">{err}</div>}
     </div>
   )
 }
@@ -329,7 +340,7 @@ function Library({
     return (
       <div className="card empty">
         <h3>No papers yet</h3>
-        <p>Hit Capture, snap a past paper, it lands here.</p>
+        <p>No scans saved on this device yet. Capture tab photographs a page, reads text offline.</p>
       </div>
     )
 
@@ -341,6 +352,7 @@ function Library({
           <button
             key={s}
             className={filter === s ? 'active press' : 'press'}
+            aria-pressed={filter === s}
             onClick={() => setFilter(s)}
           >
             {s}
@@ -404,7 +416,7 @@ function Library({
               ))}
         </div>
       ))}
-      {err && <div className="error">{err}</div>}
+      {err && <div className="error" role="alert">{err}</div>}
       <div className="row">
         <button className="btn ghost press" onClick={exportAll}>
           Export JSON
@@ -494,6 +506,7 @@ function Capture({
         type="file"
         accept="image/*"
         capture="environment"
+        aria-label="Upload photo of past paper"
         style={{ display: 'none' }}
         onChange={(e) => onFile(e.target.files?.[0])}
       />
@@ -513,7 +526,7 @@ function Capture({
         <img src={preview} alt="scan preview" className="preview" />
       )}
       {busy ? (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 10 }} aria-hidden="true">
           <div className="skeleton" style={{ height: 18, marginBottom: 8 }} />
           <div className="skeleton" style={{ height: 18, width: '80%', marginBottom: 8 }} />
           <div className="skeleton" style={{ height: 18, width: '60%' }} />
@@ -521,12 +534,14 @@ function Capture({
       ) : (
         <textarea
           className="text"
+          aria-label="Extracted text — edit before saving"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Extracted text lands here — edit before saving."
         />
       )}
-      {err && <div className="error">{err}</div>}
+      {busy && <div className="sr-only" role="status">Reading text…</div>}
+      {err && <div className="error" role="alert">{err}</div>}
       <div className="row">
         <button className="btn press" disabled={!text.trim()} onClick={save}>
           Save to library
@@ -597,7 +612,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
     return (
       <div className="card empty">
         <h3>No cards yet</h3>
-        <p>Open Library, pick a paper, hit Explain + make cards.</p>
+        <p>Nothing to drill yet. Explain a page in Library and cards appear here.</p>
       </div>
     )
 
@@ -622,7 +637,14 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
 
   return (
     <div>
-      <div className="progress">
+      <div
+        className="progress"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={deck.length}
+        aria-valuenow={(idx % deck.length) + 1}
+        aria-label="Study progress"
+      >
         <div
           className="bar"
           style={{ width: `${((idx % deck.length) / deck.length) * 100}%` }}
@@ -645,8 +667,8 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
           </button>
         ))}
         {picked !== null && (
-          <div className="row">
-            <button className="btn press" onClick={next}>
+          <div className="row" aria-live="polite">
+            <button className="btn press" onClick={next} autoFocus>
               Next card
             </button>
           </div>

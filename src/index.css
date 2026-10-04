@@ -6,7 +6,7 @@
   --border: oklch(0.24 0.018 155);
   --text: oklch(0.96 0.006 155);
   --muted: oklch(0.63 0.02 155);
-  --faint: oklch(0.45 0.018 155);
+  --faint: oklch(0.62 0.018 155);
   --emerald: oklch(0.79 0.15 156);
   --emerald-dim: oklch(0.79 0.15 156 / 0.12);
   --amber: oklch(0.72 0.11 75);
@@ -54,6 +54,21 @@ body {
   border-radius: 999px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+button {
+  touch-action: manipulation;
+}
 :focus-visible {
   outline: 2px solid var(--emerald);
   outline-offset: 2px;
@@ -95,6 +110,7 @@ main.col {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
+  min-height: 44px;
   border-radius: 12px;
   border: none;
   background: transparent;
@@ -166,6 +182,9 @@ header.top {
   font-family: var(--mono);
   font-size: 12px;
   padding: 6px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
   border: 1px solid var(--border);
   color: var(--muted);
@@ -242,8 +261,10 @@ nav.tabs button {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
   padding: 8px 4px;
+  min-height: 56px;
   border: none;
   border-radius: 10px;
   background: transparent;
@@ -373,6 +394,7 @@ button.btn {
   font-size: 14px;
   font-weight: 500;
   padding: 10px 16px;
+  min-height: 44px;
   border-radius: 12px;
   border: 1px solid oklch(0.79 0.15 156 / 0.45);
   background: var(--emerald-dim);
@@ -399,6 +421,8 @@ button.btn.ghost {
   font: inherit;
   font-size: 13px;
   padding: 7px 14px;
+  min-height: 44px;
+  min-width: 44px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: transparent;
@@ -457,9 +481,13 @@ textarea.text {
 
 img.preview {
   width: 100%;
+  height: auto;
+  display: block;
+  min-height: 160px;
   border-radius: 12px;
   margin-top: 12px;
   border: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .progress {
@@ -488,6 +516,7 @@ img.preview {
   text-align: left;
   margin-top: 8px;
   padding: 12px 14px;
+  min-height: 48px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: oklch(0.12 0.013 155);

@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 
 export const DEMO_FPS = 30;
-export const DEMO_FRAMES = 2760; // 92s — matches voiceover.mp3 (92s)
+export const DEMO_FRAMES = 1740; // 58s — matches voiceover.mp3 (58s)
 
 const BG = '#0a0a0f';
 const GREEN = '#7dd87d';
@@ -178,30 +178,30 @@ export const Demo: React.FC = () => {
     <AbsoluteFill>
       {/* replace remotion/voiceover.mp3 with your recording, same name, re-render */}
       <Audio src={staticFile('voiceover.mp3')} volume={1} />
-      <Sequence from={0} durationInFrames={180}>
+      <Sequence from={0} durationInFrames={120}>
         <TitleCard
           kicker="HACK47 OFFGRID"
           title="study when the grid fails"
           accent="GridFail — offline-first AI study kit"
         />
       </Sequence>
-      <Sequence from={180} durationInFrames={420}>
+      <Sequence from={120} durationInFrames={270}>
         <Shot src="shots/01-library.png">
           <Caption
             text="Install once. Your library lives on the device."
-            sub="Seeded matric practice sets, ready with zero signal."
+            sub="Seeded practice sets, ready with zero signal."
           />
         </Shot>
       </Sequence>
-      <Sequence from={600} durationInFrames={480}>
+      <Sequence from={390} durationInFrames={270}>
         <Shot src="shots/02-open.png">
           <Caption
             text="Snap a past paper. Tap Explain."
-            sub="Answers land in milliseconds — labeled instant, on-device, or cloud."
+            sub="Instant breakdown in milliseconds, AI upgrades in background."
           />
         </Shot>
       </Sequence>
-      <Sequence from={1080} durationInFrames={480}>
+      <Sequence from={660} durationInFrames={270}>
         <Shot src="shots/03-study.png">
           <Caption
             text="Flashcards + quiz, weakest-first."
@@ -209,7 +209,7 @@ export const Demo: React.FC = () => {
           />
         </Shot>
       </Sequence>
-      <Sequence from={1560} durationInFrames={480}>
+      <Sequence from={930} durationInFrames={270}>
         <Shot src="shots/04-offline.png">
           <Caption
             text="Airplane mode. Still works."
@@ -217,14 +217,14 @@ export const Demo: React.FC = () => {
           />
         </Shot>
       </Sequence>
-      <Sequence from={2040} durationInFrames={450}>
+      <Sequence from={1200} durationInFrames={240}>
         <TechCard />
         <Caption
           text="Zero backend. OCR, AI, storage — all on-device."
           sub="Dexie IndexedDB · Transformers.js · Tesseract, all cached offline."
         />
       </Sequence>
-      <Sequence from={2490} durationInFrames={270}>
+      <Sequence from={1440} durationInFrames={300}>
         <TitleCard
           kicker="GRIDFAIL — TRY IT LIVE"
           title="gridfail.vercel.app"

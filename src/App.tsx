@@ -576,7 +576,7 @@ function Study({ cards, refresh }: { cards: Card[]; refresh: () => Promise<void>
         [...cards].sort((x, y) => acc(x) - acc(y)).map((c) => c.id),
       )
     })
-  }, [cards.length])
+  }, [cards])
 
   const deck = order
     ? order

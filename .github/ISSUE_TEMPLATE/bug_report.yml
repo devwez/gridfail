@@ -1,0 +1,31 @@
+name: Bug report
+description: Something broken? Tell us what happened.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      placeholder: The quiz score reset after I reopened the app…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. Scan a paper 2. Answer quiz 3. Reload…
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device / browser
+      placeholder: Tecno Spark 10, Chrome 126
+    validations:
+      required: true
+  - type: checkboxes
+    id: offline
+    attributes:
+      label: Did you test offline?
+      options:
+        - label: Yes, I tested in airplane mode

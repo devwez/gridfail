@@ -24,7 +24,7 @@ quietly to AI explanations labeled on-device vs cloud. A green OFFLINE pill
 proves the app never phones home.
 
 ## Demo Link
-TODO: paste Vercel URL (`npx vercel --prod` from repo root)
+https://gridfail.vercel.app
 
 ## Source Code
 https://github.com/devwez/gridfail
